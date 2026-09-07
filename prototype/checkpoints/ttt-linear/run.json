@@ -1,0 +1,10 @@
+{
+  "mixer": "ttt_linear",
+  "mode": "pretrain",
+  "params": 17458736,
+  "device": "cpu",
+  "amp": "off",
+  "seq_len": 128,
+  "batch_size": 2,
+  "grad_accum": 1
+}

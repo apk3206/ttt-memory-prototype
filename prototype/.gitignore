@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.venv/
+.venv-data/
+data/
+kaggle_upload/
+checkpoints/**/*.pt
+checkpoints/**/last/
+runs/
+wandb/

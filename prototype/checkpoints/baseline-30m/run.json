@@ -1,0 +1,29 @@
+{
+  "task": "causal_language_modeling",
+  "not_classification": true,
+  "mixer": "attn",
+  "mode": "pretrain",
+  "params": 31367680,
+  "device": "cuda",
+  "amp": "fp16",
+  "optimizer": "adamw",
+  "epochs": 10,
+  "seq_len": 256,
+  "batch_size": 2,
+  "grad_accum": 2,
+  "train_chunks": 97375,
+  "opt_steps_per_epoch": 24343,
+  "metrics": [
+    "loss",
+    "perplexity",
+    "entropy",
+    "unique_preds",
+    "token_match"
+  ],
+  "do_not_use": [
+    "class accuracy",
+    "SMOTE",
+    "ROC-AUC"
+  ],
+  "collapse_rule": "flag only if entropy<1.2 and (top1_mass>0.9 or token_match>0.85)"
+}

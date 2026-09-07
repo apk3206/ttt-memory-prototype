@@ -1,0 +1,7 @@
+datasets>=3.0,<4.0
+torch>=2.5,<2.8
+tqdm>=4.66,<5.0
+transformers>=4.47,<5.0
+tokenizers>=0.21,<0.22
+numpy>=2.0,<3.0
+streamlit>=1.40

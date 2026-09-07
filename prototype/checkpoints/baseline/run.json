@@ -1,0 +1,10 @@
+{
+  "mixer": "attn",
+  "mode": "pretrain",
+  "params": 17234304,
+  "device": "cpu",
+  "amp": "off",
+  "seq_len": 128,
+  "batch_size": 2,
+  "grad_accum": 1
+}

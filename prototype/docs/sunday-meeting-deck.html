@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Once upon a residual stream — TTT memory status</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,400;6..72,600&family=Outfit:wght@500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #f4efe4;
+      --mute: #9a9080;
+      --copper: #e0a45a;
+      --mint: #7dcfb6;
+      --rose: #e07a6a;
+      --paper: rgba(14, 12, 18, 0.94);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; overflow: hidden; color: var(--ink);
+      font-family: Outfit, "Segoe UI", system-ui, sans-serif; background: #0b0a0e; }
+    #fx {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      width: 100% !important; height: 100% !important; display: block;
+    }
+    .vignette {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+      background:
+        radial-gradient(120% 80% at 10% -10%, rgba(224,164,90,0.12), transparent 42%),
+        radial-gradient(90% 70% at 110% 110%, rgba(125,207,182,0.10), transparent 46%),
+        linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.45));
+    }
+    .ticker {
+      position: fixed; bottom: 42px; left: 0; right: 0; z-index: 2;
+      overflow: hidden; white-space: nowrap; font-family: "IBM Plex Mono", monospace;
+      font-size: 12px; color: rgba(244,239,228,0.38); letter-spacing: 0.12em;
+      border-top: 1px solid rgba(224,164,90,0.18); padding: 8px 0;
+      background: rgba(8,7,10,0.55);
+    }
+    .ticker span { display: inline-block; padding-left: 100%; animation: drift 48s linear infinite; }
+    @keyframes drift { to { transform: translateX(-50%); } }
+
+    #deck { position: relative; z-index: 3; height: 100%; }
+    .slide {
+      display: none; height: 100%; padding: 64px 80px 88px;
+      flex-direction: column; justify-content: center;
+    }
+    .slide.on { display: flex; }
+    .panel {
+      position: relative; z-index: 5;
+      max-width: min(1040px, 92vw);
+      max-height: calc(100vh - 130px);
+      overflow: auto;
+      background: var(--paper);
+      border: 1px solid rgba(224,164,90,0.35);
+      padding: 32px 40px 28px;
+    }
+    .kicker {
+      font-family: "IBM Plex Mono", monospace;
+      color: var(--copper); font-size: 12px; letter-spacing: 0.22em;
+      text-transform: uppercase; margin-bottom: 12px;
+    }
+    h1 {
+      font-family: Newsreader, Georgia, serif;
+      font-size: clamp(40px, 5.4vw, 64px); font-weight: 400;
+      line-height: 1.05; margin: 0 0 16px; letter-spacing: -0.03em;
+    }
+    h2 {
+      font-family: Newsreader, Georgia, serif;
+      font-size: clamp(28px, 3.4vw, 40px); font-weight: 400;
+      margin: 0 0 18px; line-height: 1.15;
+    }
+    p, li { font-size: 19px; line-height: 1.48; color: var(--ink); }
+    .lede { font-family: Newsreader, Georgia, serif; font-size: 22px; max-width: 54ch; }
+    .muted { color: var(--mute); font-size: 15px; }
+    ul { margin: 4px 0 0; padding-left: 18px; }
+    li { margin: 9px 0; }
+    code { font-family: "IBM Plex Mono", monospace; font-size: 0.86em; color: var(--mint); }
+    table { border-collapse: collapse; width: 100%; font-size: 16px; }
+    th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid rgba(244,239,228,0.1); }
+    th { color: var(--mute); font-weight: 500; font-family: "IBM Plex Mono", monospace; font-size: 12px; letter-spacing: 0.06em; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .chip {
+      font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--mint); border: 1px solid rgba(125,207,182,0.35);
+      display: inline-block; padding: 4px 8px; margin: 0 8px 8px 0;
+    }
+    .mixers { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 8px; }
+    .mixer {
+      border: 1px solid rgba(244,239,228,0.12); padding: 16px 18px;
+      min-height: 120px;
+    }
+    .mixer.attn { box-shadow: inset 8px 0 0 var(--copper); }
+    .mixer.ttt { box-shadow: inset 8px 0 0 var(--mint); }
+    .mixer h3 { margin: 0 0 6px; font-size: 14px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 600; }
+    .bar {
+      position: fixed; z-index: 4; bottom: 10px; left: 80px; right: 80px;
+      display: flex; justify-content: space-between; align-items: center;
+      font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--mute); letter-spacing: 0.08em;
+    }
+    .pips { display: flex; gap: 6px; }
+    .pips i { width: 18px; height: 2px; background: rgba(244,239,228,0.2); display: block; }
+    .pips i.on { background: var(--copper); }
+    @media print {
+      .slide { display: flex !important; height: auto; min-height: 100vh; page-break-after: always; background: #0b0a0e; }
+      .ticker, .bar, #fx { display: none; }
+      .panel { background: #16141b; }
+    }
+  </style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+<div class="vignette"></div>
+<div class="ticker"><span>
+  once upon a time ▸ the residual stream ▸ next token ▸ TinyStories ▸ vocab 8000 ▸ seq 256 ▸ causal mask ▸ Q K V ▸ softmax ▸ TTT inner loop ▸ W_t+1 ▸ AdamW L2 0.1 ▸ PPL 258 → 5.2 ▸ not classification ▸ collapse off ▸ 31.4M ▸ 8 layers ▸ SwiGLU ▸ last.pt step 101936 ▸
+  once upon a time ▸ the residual stream ▸ next token ▸ TinyStories ▸ vocab 8000 ▸ seq 256 ▸ causal mask ▸ Q K V ▸ softmax ▸ TTT inner loop ▸ W_t+1 ▸ AdamW L2 0.1 ▸ PPL 258 → 5.2 ▸ not classification ▸ collapse off ▸ 31.4M ▸ 8 layers ▸ SwiGLU ▸ last.pt step 101936 ▸
+</span></div>
+
+<div id="deck">
+
+<section class="slide on" data-scene="title">
+  <div class="panel">
+    <div class="kicker">Sunday team meeting · 7 Sep 2026</div>
+    <h1>Once upon a time,<br>a 30M model learned the next word.</h1>
+    <p class="lede">This is our status from day one. We are building a <b>causal language model</b> on TinyStories-v2: it reads a child’s story and guesses the next token. It is <b>not</b> a spam classifier, not SMOTE, not 99% accuracy.</p>
+    <p>Plan: train a matched <b>31.4 million</b> parameter body twice. First mixer = <b>attention</b> (baseline, 10 epochs done). Second mixer = <b>TTT-Linear</b> (test-time training memory, not started). Same width, depth, vocab, optimizer. Only the memory mechanism changes.</p>
+    <p class="muted">Say this opening: “We taught a small story model to predict the next word. Attention works. TTT is the experiment still ahead.”</p>
+  </div>
+</section>
+
+<section class="slide" data-scene="mask">
+  <div class="panel">
+    <div class="kicker">What we are actually optimizing</div>
+    <h2>The exam is always: what token comes next?</h2>
+    <p>Every training step takes a 256-token chunk of TinyStories. The model sees tokens 1…t and must name token t+1. Loss is <b>cross-entropy</b>. The gold-colored triangle in the background is a <b>causal mask</b>: the model is forbidden to look at the future. That is the whole scientific claim of this project.</p>
+    <ul>
+      <li><b>Fair comparison.</b> One skeleton (512 hidden, 8 layers, 8 heads, SwiGLU 1536, 8k vocab). Swap only the mixer: softmax attention vs TTT-Linear inner-loop memory.</li>
+      <li><b>Real win.</b> Validation perplexity falls (how surprised the model is on held-out stories) and entropy stays high enough that it still uses many words.</li>
+      <li><b>Fake win we reject.</b> Token match near 99% with entropy near zero means the model collapsed to a few tokens. That is a broken LM, not a good classifier.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="slide" data-scene="arch">
+  <div class="panel">
+    <div class="kicker">Architecture we locked</div>
+    <h2>One body, two kinds of memory</h2>
+    <p>We threw away the old ~17M checkpoints. They were a different shape and cannot resume into this run. The 30M recipe:</p>
+    <ul>
+      <li><b>~31,367,680</b> parameters · hidden 512 · <b>8 layers</b> · <b>8 heads</b> · SwiGLU intermediate 1536</li>
+      <li>Tokenizer vocab <b>8,000</b> · sequence length <b>256</b> · batch 2 × grad-accum 2 on Kaggle T4</li>
+      <li>Optimizer <b>AdamW</b> β = (0.9, 0.95) · <b>L2 = weight decay 0.1</b> on matrices only (bias and LayerNorm/RMSNorm are not decayed)</li>
+      <li>Dropout 0.1 from scratch; <b>0.05</b> when we continue a plateaued run so it can still fit</li>
+    </ul>
+    <div class="mixers">
+      <div class="mixer attn">
+        <h3>Attention — finished 10 epochs</h3>
+        <p>Classic QKᵀ softmax over the 256-token window. This is the baseline the paper-style comparison needs. Weights: <code>last.pt</code> at step <b>101,936</b>.</p>
+      </div>
+      <div class="mixer ttt">
+        <h3>TTT-Linear — not started</h3>
+        <p>Test-time training: a small linear memory updated inside the forward pass. Same 31.4M budget. New folder <code>ttt-linear-30m</code>. <b>Never</b> load attention <code>last.pt</code> into it.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-scene="story">
+  <div class="panel">
+    <div class="kicker">Chronology since day one</div>
+    <h2>How we actually got a working story model</h2>
+    <p><b>1. Prototype.</b> We wrote <code>tttmem</code>: CausalLM, RoPE, SwiGLU blocks, next-token loss, collapse metrics, Streamlit so you can type “Once upon a time” and hear the model continue the tale.</p>
+    <p><b>2. Laptop then Colab.</b> Attention 30M reached about step 31,000 (still epoch 1). Val perplexity ~10.5, token match ~51%. Alive, not collapsed, but not finished.</p>
+    <p><b>3. Kaggle.</b> Colab Drive and zip names fought us. We moved to Kaggle datasets (<code>src30m</code> + <code>last.pt</code>). Ten epochs completed. The file we resume is ~376 MB at epoch 10 / step 101,936.</p>
+    <p><b>4. Fit, not more L2.</b> Train and val are close (epoch-7 train CE ~1.56 vs val ~1.72). Raising weight decay would usually <i>hurt</i> this model. The continue-fit recipe is more epochs, dropout 0.05, cosine LR floor 10% of peak.</p>
+    <p><b>5. Hardware lesson.</b> Current Kaggle PyTorch has no kernels for Tesla P100 (sm_60). Training must be <b>GPU T4</b> (sm_75). We already confirmed T4 + new <code>train.py</code> (16,239 bytes) + <code>ckpt.py</code>.</p>
+  </div>
+</section>
+
+<section class="slide" data-scene="ppl">
+  <div class="panel">
+    <div class="kicker">The numbers you can defend in the meeting</div>
+    <h2>Attention 30M learned the corpus</h2>
+    <p>Read this table left to right as “the model got less surprised by held-out TinyStories.” The mint curve behind you is that same fall in perplexity.</p>
+    <table>
+      <tr><th>Stage</th><th>Val loss</th><th>Val PPL</th><th>Token match</th><th>Meaning</th></tr>
+      <tr><td>Step 250 (almost random)</td><td>~5.55</td><td>~258</td><td>~17%</td><td>Does not know stories yet</td></tr>
+      <tr><td>Step 31k · laptop / Colab</td><td>~2.29</td><td>~10.5</td><td>~51%</td><td>First real LM, epoch 1</td></tr>
+      <tr><td>Best log · step 47,750</td><td>1.65</td><td><b>5.23</b></td><td>~60%</td><td>Best logged val so far</td></tr>
+      <tr><td>Epoch 8 · step 53,250</td><td>~1.69</td><td>~5.45</td><td>~59%</td><td>Stable, collapse flag off</td></tr>
+      <tr><td>Weights on disk</td><td colspan="4">Epoch <b>10</b>, optimizer step <b>101,936</b> — resume point for epochs 11–20</td></tr>
+    </table>
+    <p class="muted">Sources: <code>checkpoints/baseline-30m/metrics.jsonl</code> and packed <code>last.pt</code> (Kaggle dataset meetyep).</p>
+  </div>
+</section>
+
+<section class="slide" data-scene="entropy">
+  <div class="panel">
+    <div class="kicker">How not to misread the scoreboard</div>
+    <h2>Fifty-nine percent is a healthy storyteller</h2>
+    <p>The vocabulary has <b>8,000</b> pieces. Guessing the exact next TinyStories token ~59% of the time is strong next-word prediction. A human would not score 99% either. If we ever saw ~99% match with entropy below 1.2, the model would be stuck saying the same few words — we coded that as <b>collapse</b>, and it stayed <b>off</b>.</p>
+    <div class="grid">
+      <p><b>Collapse rule (in the trainer).</b> Flag only if entropy &lt; 1.2 <i>and</i> (top-1 mass &gt; 0.9 or token match &gt; 0.85). We never met that. Unique predicted tokens stayed in the hundreds per batch.</p>
+      <p><b>Underfit vs overfit.</b> Epoch-7 mean train loss ~1.56 versus val ~1.72. Small gap. This is not a model that memorized train and failed val. Extra L2 on the loss, or weight decay ≫ 0.1, would typically raise val PPL — the opposite of what we want.</p>
+    </div>
+    <p>Say this: “If someone asks why accuracy is not 99%, the answer is: because this is language modeling, and 99% would mean we broke it.”</p>
+  </div>
+</section>
+
+<section class="slide" data-scene="code">
+  <div class="panel">
+    <div class="kicker">What landed in the repository</div>
+    <h2>The experiment is encoded, not just trained</h2>
+    <p>Teammates can clone the prototype and run the same protocol. The important pieces:</p>
+    <ul>
+      <li><code>tttmem/</code> — CausalLM, attention or TTT-Linear mixer, RoPE, RMSNorm, SwiGLU.</li>
+      <li><code>scripts/train.py</code> — AdamW + decoupled L2, cosine LR with a 10% floor, collapse checks, train-eval vs val gap, refuse mixer/size mismatch on resume, refuse Pascal GPUs.</li>
+      <li><code>scripts/pack_ckpt.py</code> — Windows cannot <code>torch.load</code> an unzipped <code>last/</code> folder; we zip it back to <code>last.pt</code>.</li>
+      <li><code>notebooks/kaggle_train_30m.ipynb</code> — cell 1 copies code and weights; <b>cell 2 is the training job</b>.</li>
+      <li><code>app.py</code> — Streamlit inspect: val curves and generation from “Once upon a time”.</li>
+    </ul>
+    <p class="muted">Push <b>code</b> to GitHub. Do not git-add the 376 MB checkpoint (GitHub cap 100 MB). Share weights on Kaggle Output or Drive.</p>
+  </div>
+</section>
+
+<section class="slide" data-scene="glitch">
+  <div class="panel">
+    <div class="kicker">What ate the calendar (so we do not repeat it)</div>
+    <h2>Ops failures, not science failures</h2>
+    <ul>
+      <li><b>JSON in a code cell.</b> Opening <code>kaggle_train_30m.ipynb</code> in Notepad and pasting it into Kaggle runs <code>execution_count: null</code>. Python has no <code>null</code>. Upload the notebook or paste only the Python.</li>
+      <li><b>Stale zip.</b> The 1 Sep <code>src30m.zip</code> had data but no <code>ckpt.py</code>. We rebuilt it. Cell 1 must print <code>has ckpt.py True</code> and <code>train.py bytes 16239</code>.</li>
+      <li><b>Wrong GPU.</b> P100 looks like “a GPU” but this torch build only runs sm_70+ (T4). First embedding call dies with “no kernel image.” Settings → Accelerator → GPU T4, then restart.</li>
+      <li><b>Wrong cell.</b> Cell 1 stopping at READY is success. Training is the second cell and must stay running for hours. Save Version or Output wipes <code>/kaggle/working</code>.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="slide" data-scene="next">
+  <div class="panel">
+    <div class="kicker">This week and the week after</div>
+    <h2>Finish attention. Then change only the mixer.</h2>
+    <p><span class="chip">Now</span> On Tesla T4, resume <code>meetyep/last.pt</code> with <code>--epochs 20 --dropout 0.05 --weight-decay 0.1</code>. You should see <code>Resumed ... step 101937 epoch=10</code>. Let it run. Save Version so the new <code>last.pt</code> survives.</p>
+    <p><span class="chip">Next</span> Train TTT-Linear 30M <b>from scratch</b> into <code>checkpoints/ttt-linear-30m</code>. Same seq, batch, AdamW, L2. Do not pass the attention checkpoint as <code>--resume</code>.</p>
+    <p><span class="chip">Then</span> <code>python scripts/compare_metrics.py</code> — one number that matters: last validation PPL of TTT minus attention. Negative means TTT is a better story model at the same size.</p>
+    <p>Until the continue-fit attention file is saved, we do not start TTT. Mixing the two mid-run would poison the comparison.</p>
+  </div>
+</section>
+
+<section class="slide" data-scene="ask">
+  <div class="panel">
+    <div class="kicker">What we need from the team today</div>
+    <h2>Four decisions, then we keep training</h2>
+    <ul>
+      <li><b>Metrics.</b> We report val loss, perplexity, entropy, token match, collapse flag. We do not report “accuracy 99%.”</li>
+      <li><b>Regularization.</b> L2 stays AdamW weight decay 0.1. Nobody adds a second L2 term on the logits or raises decay “to fight underfitting.”</li>
+      <li><b>Ownership.</b> One person owns the Kaggle T4 session and Save Version. Everyone else reviews logs, not live cells.</li>
+      <li><b>Sequence.</b> Lock attention continue-fit → then TTT-Linear 30M → then compare PPL. Weights stay off GitHub; code goes on GitHub.</li>
+    </ul>
+    <p>Close with: “Attention already tells TinyStories. The research question is whether TTT-Linear tells them better at the same 31 million parameters.”</p>
+    <p class="muted">Arrows or click to change slides · F11 fullscreen · Ctrl+P to PDF</p>
+  </div>
+</section>
+
+</div>
+<div class="bar">
+  <span>TTTMEM · causal LM · TinyStories</span>
+  <span class="pips" id="pips"></span>
+  <span id="pos"></span>
+</div>
+
+<script>
+  const canvas = document.getElementById("fx");
+  const ctx = canvas.getContext("2d");
+  const slides = [...document.querySelectorAll(".slide")];
+  const pips = document.getElementById("pips");
+  slides.forEach(() => pips.appendChild(document.createElement("i")));
+  let i = 0, t = 0, scene = "title";
+
+  const ppl = [258, 63, 26, 18, 12, 10.5, 8.2, 7.1, 5.7, 5.23, 5.45];
+
+  function resize() {
+    const dpr = Math.max(1, devicePixelRatio || 1);
+    canvas.width = Math.floor(innerWidth * dpr);
+    canvas.height = Math.floor(innerHeight * dpr);
+    canvas.style.width = innerWidth + "px";
+    canvas.style.height = innerHeight + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  resize();
+  addEventListener("resize", resize);
+
+  function drawMask(w, h, pulse) {
+    const n = 14, s = Math.min(w, h) * 0.042, ox = w * 0.58, oy = h * 0.18;
+    for (let r = 0; r < n; r++) {
+      for (let c = 0; c <= r; c++) {
+        const a = 0.04 + 0.11 * (c / n) * (0.6 + 0.4 * Math.sin(pulse + r * 0.3));
+        ctx.fillStyle = `rgba(224,164,90,${a})`;
+        ctx.fillRect(ox + c * s, oy + r * s, s - 2, s - 2);
+      }
+    }
+  }
+
+  function drawTokens(w, h, pulse) {
+    ctx.font = "12px 'IBM Plex Mono', monospace";
+    const words = ["once","upon","a","time","the","girl","found","a","hidden","token","in","the","forest"];
+    for (let k = 0; k < 18; k++) {
+      const x = (k * 92 + pulse * 28) % (w + 80) - 40;
+      const y = 48 + (k % 3) * 18;
+      ctx.fillStyle = `rgba(125,207,182,${0.18 + 0.12 * ((k + i) % 3)})`;
+      ctx.fillText(words[k % words.length], x, y);
+    }
+  }
+
+  function drawPpl(w, h) {
+    ctx.beginPath();
+    ppl.forEach((v, idx) => {
+      const x = w * 0.08 + idx * (w * 0.08);
+      const y = h * 0.82 - Math.log(v) * 28;
+      if (idx === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.strokeStyle = "rgba(125,207,182,0.35)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  function drawLoop(w, h, pulse) {
+    const cx = w * 0.78, cy = h * 0.55, R = Math.min(w, h) * 0.16;
+    ctx.strokeStyle = "rgba(125,207,182,0.28)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R, pulse, pulse + Math.PI * 1.5);
+    ctx.stroke();
+    ctx.fillStyle = "rgba(224,164,90,0.7)";
+    ctx.beginPath();
+    ctx.arc(cx + Math.cos(pulse) * R, cy + Math.sin(pulse) * R, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.font = "11px 'IBM Plex Mono'";
+    ctx.fillStyle = "rgba(244,239,228,0.35)";
+    ctx.fillText("W ← W - ∇ℓ", cx - 28, cy + 4);
+  }
+
+  function drawHeads(w, h, pulse) {
+    for (let hidx = 0; hidx < 8; hidx++) {
+      const y = h * 0.2 + hidx * (h * 0.07);
+      ctx.strokeStyle = `rgba(224,164,90,${0.12 + 0.08 * Math.sin(pulse + hidx)})`;
+      ctx.beginPath();
+      ctx.moveTo(w * 0.62, y);
+      ctx.bezierCurveTo(w * 0.78, y - 20, w * 0.82, y + 40, w * 0.94, y + 10 * Math.sin(pulse + hidx));
+      ctx.stroke();
+    }
+  }
+
+  function frame() {
+    t += 0.012;
+    const w = innerWidth, h = innerHeight;
+    ctx.clearRect(0, 0, w, h);
+    const g = ctx.createLinearGradient(0, 0, w, h);
+    g.addColorStop(0, "#120f16");
+    g.addColorStop(1, "#0b0a0e");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, w, h);
+
+    if (scene === "title" || scene === "mask") drawMask(w, h, t);
+    if (scene === "title" || scene === "story" || scene === "entropy") drawTokens(w, h, t);
+    if (scene === "ppl" || scene === "next") drawPpl(w, h);
+    if (scene === "arch" || scene === "code") drawHeads(w, h, t);
+    if (scene === "next" || scene === "ask") drawLoop(w, h, t);
+    if (scene === "glitch") {
+      ctx.fillStyle = "rgba(224,122,106,0.05)";
+      ctx.fillRect(0, (Math.sin(t * 8) * 0.5 + 0.5) * h, w, 8);
+      drawTokens(w, h, t * 3);
+    }
+    requestAnimationFrame(frame);
+  }
+  frame();
+
+  function show(n) {
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach((s, k) => s.classList.toggle("on", k === i));
+    [...pips.children].forEach((el, k) => el.classList.toggle("on", k === i));
+    scene = slides[i].dataset.scene || "title";
+    document.getElementById("pos").textContent = String(i + 1).padStart(2, "0") + " / " + String(slides.length).padStart(2, "0");
+  }
+  show(0);
+  document.addEventListener("keydown", e => {
+    if (["ArrowRight", " ", "PageDown"].includes(e.key)) { e.preventDefault(); show(i + 1); }
+    if (["ArrowLeft", "PageUp"].includes(e.key)) { e.preventDefault(); show(i - 1); }
+    if (e.key === "Home") show(0);
+    if (e.key === "End") show(slides.length - 1);
+    if (e.key === "f" || e.key === "F") document.documentElement.requestFullscreen?.();
+  });
+  document.getElementById("deck").addEventListener("click", e => {
+    if (e.target.closest("a") || e.target.closest(".panel")) return;
+    show(i + (e.clientX > innerWidth / 2 ? 1 : -1));
+  });
+</script>
+</body>
+</html>
